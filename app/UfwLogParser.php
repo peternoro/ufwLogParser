@@ -146,14 +146,19 @@ namespace App {
                      * 12.  Source Port
                      * 13.  Destination Port
                      */
-                    preg_match('/^([a-zA-z]{3}) ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}) ([a-z0-9]{3,}) .* \[(UFW.*)\] IN=([a-z0-9]{2,9}) OUT=([a-z0-9]{0,9}) MAC=([a-z0-9:]{4,}) SRC=([0-9.]{4,}) DST=([0-9.]{4,}).*PROTO=([A-Z]{3}) SPT=([0-9]{1,5}) DPT=([0-9]{1,5}) .*$/i', $v, $r);
+                    preg_match('/^([a-zA-z]{3}) {1,}([0-9]{1,2}) ([0-9]{2}:[0-9]{2}:[0-9]{2}) ([a-z0-9]{3,}) .* \[(UFW.*)\] IN=([a-z0-9]{2,9}) OUT=([a-z0-9]{0,9}) MAC=([a-z0-9:]{4,}) SRC=([a-z0-9:.]{4,}) DST=([a-z0-9:.]{4,}).*PROTO=([A-Z]{3}) SPT=([0-9]{1,5}) DPT=([0-9]{1,5}) .*$/i', $v, $r);
+
+                    //I had problem with Multicast packets and empty lines so I ignored them
+                    if(strpos($v,'DST=224.0.0.') || empty($v)){
+                        continue;
+                    }
 
                     $return[$k]['log_month'] = $this->_shortMonthToInt($r[1]);
                     $return[$k]['log_day'] = $r[2];
                     $return[$k]['log_year'] = date('Y', $fmTime);
                     //$return[$k]['time'] = $r[3];
                     $_tmp = explode(":", $r[3]);
-                    $return[$k]['log_unixtime'] = mktime((int)$_tmp[0], (int)$_tmp[1], (int)$_tmp[2], $return[$k]['month'], $r[2], $return[$k]['year']);
+                    $return[$k]['log_unixtime'] = mktime((int)$_tmp[0], (int)$_tmp[1], (int)$_tmp[2], $return[$k]['log_month'], $r[2], $return[$k]['log_year']);
                     $return[$k]['log_hour'] = $_tmp[0];
                     $return[$k]['log_minute'] = $_tmp[1];
                     $return[$k]['log_second'] = $_tmp[2];
@@ -206,6 +211,8 @@ namespace App {
             }
 
             $this->_parsedContent = $return;
+
+            return $this;
         }
 
         /**
